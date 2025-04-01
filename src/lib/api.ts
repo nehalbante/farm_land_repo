@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { Note, NoteWithDetails, Rating } from "@/types";
 import { Database } from "@/integrations/supabase/types";
@@ -8,7 +7,6 @@ export async function fetchNotes(searchQuery?: string): Promise<NoteWithDetails[
     .from("notes")
     .select(`
       *,
-      profile: profiles(username, avatar_url),
       ratings(rating)
     `)
     .order("created_at", { ascending: false });
@@ -31,7 +29,7 @@ export async function fetchNotes(searchQuery?: string): Promise<NoteWithDetails[
 
     return {
       ...note,
-      profile: note.profile || { username: "Anonymous User" },
+      profile: { username: "Anonymous User" }, // Default profile for all notes
       average_rating: averageRating,
       ratings_count: ratings.length,
     };
@@ -154,7 +152,6 @@ export async function uploadNote(
   console.log("Note record created successfully");
 }
 
-// Helper function to format file size
 function formatFileSize(bytes: number): string {
   if (bytes === 0) return '0 Bytes';
   
@@ -204,7 +201,6 @@ export async function getUserNotes(userId: string): Promise<NoteWithDetails[]> {
     .from("notes")
     .select(`
       *,
-      profile: profiles(username, avatar_url),
       ratings(rating)
     `)
     .eq("uploader_id", userId)

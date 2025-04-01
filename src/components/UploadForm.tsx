@@ -52,7 +52,7 @@ export const UploadForm = ({ onSuccess }: UploadFormProps) => {
       await uploadNote(
         data.title,
         "", // Empty description
-        data.file,
+        data.file, // This is now a File object thanks to the transform in the schema
         null // No user ID needed anymore
       );
       
