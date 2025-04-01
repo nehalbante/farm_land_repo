@@ -17,33 +17,25 @@ const Index = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   
+  const loadNotes = async () => {
+    try {
+      setIsLoading(true);
+      const fetchedNotes = await fetchNotes(searchQuery || undefined);
+      setNotes(fetchedNotes);
+    } catch (error) {
+      console.error("Error fetching notes:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
   useEffect(() => {
-    const loadNotes = async () => {
-      try {
-        setIsLoading(true);
-        const fetchedNotes = await fetchNotes();
-        setNotes(fetchedNotes);
-      } catch (error) {
-        console.error("Error fetching notes:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    
     loadNotes();
   }, []);
   
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
-    try {
-      setIsLoading(true);
-      const searchResults = await fetchNotes(searchQuery);
-      setNotes(searchResults);
-    } catch (error) {
-      console.error("Error searching notes:", error);
-    } finally {
-      setIsLoading(false);
-    }
+    loadNotes();
   };
   
   const clearSearch = async () => {
@@ -57,6 +49,10 @@ const Index = () => {
     } finally {
       setIsLoading(false);
     }
+  };
+  
+  const handleNoteUpdate = () => {
+    loadNotes();
   };
   
   return (
@@ -125,7 +121,7 @@ const Index = () => {
                 <NoteCard 
                   key={note.id} 
                   note={note} 
-                  showRatingInteraction={false}
+                  onDelete={handleNoteUpdate}
                 />
               ))}
             </div>

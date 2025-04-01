@@ -19,6 +19,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { useAuth } from "@/context/AuthContext";
 
 interface NoteCardProps {
   note: NoteWithDetails;
@@ -28,9 +29,11 @@ interface NoteCardProps {
 
 export const NoteCard = ({ note, onDelete, showRatingInteraction = false }: NoteCardProps) => {
   const [isDeleting, setIsDeleting] = useState(false);
+  const { user } = useAuth();
+  const [ratingUpdated, setRatingUpdated] = useState(false);
   
   // Since uploader_id is now nullable, we need to check if it exists
-  const isOwner = false; // Removing owner concept for anonymous uploads
+  const isOwner = note.uploader_id === user?.id;
   const fileUrl = note.file_url;
   
   const handleDownload = () => {
@@ -73,6 +76,14 @@ export const NoteCard = ({ note, onDelete, showRatingInteraction = false }: Note
       setIsDeleting(false);
     }
   };
+
+  const handleRatingChange = () => {
+    setRatingUpdated(true);
+    if (onDelete) {
+      // Use onDelete as a general refresh callback
+      onDelete();
+    }
+  };
   
   // Format uploaded date
   let uploadedDate;
@@ -105,14 +116,13 @@ export const NoteCard = ({ note, onDelete, showRatingInteraction = false }: Note
         </div>
       </CardContent>
       <CardFooter className="flex justify-between pt-2">
-        {showRatingInteraction && (
-          <RatingStars 
-            noteId={note.id}
-            averageRating={note.average_rating}
-            ratingsCount={note.ratings_count}
-            interactive={showRatingInteraction}
-          />
-        )}
+        <RatingStars 
+          noteId={note.id}
+          averageRating={ratingUpdated ? note.average_rating : note.average_rating}
+          ratingsCount={ratingUpdated ? note.ratings_count + 1 : note.ratings_count}
+          interactive={true}
+          onRatingChange={handleRatingChange}
+        />
         <Button 
           onClick={handleDownload} 
           variant="default" 

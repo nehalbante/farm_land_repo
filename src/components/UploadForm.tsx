@@ -51,10 +51,11 @@ export const UploadForm = ({ onSuccess }: UploadFormProps) => {
       setIsUploading(true);
       
       // data.file is a File object thanks to the Zod transform
+      const fileToUpload: File = data.file;
       await uploadNote(
         data.title,
         "", // Empty description
-        data.file, // This is a File object thanks to Zod transform
+        fileToUpload,
         null // No user ID needed anymore
       );
       
@@ -82,8 +83,7 @@ export const UploadForm = ({ onSuccess }: UploadFormProps) => {
     const files = e.target.files;
     if (files && files.length > 0) {
       setSelectedFile(files[0]);
-      // Pass the FileList to setValue, the schema will handle the transformation
-      form.setValue("file", files as unknown as FileList);
+      form.setValue("file", files);
     } else {
       setSelectedFile(null);
     }
