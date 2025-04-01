@@ -49,11 +49,11 @@ export const UploadForm = ({ onSuccess }: UploadFormProps) => {
   const onSubmit = async (data: UploadFormValues) => {
     try {
       setIsUploading(true);
-      // Here's the fix: data.file is already a File object after the transformation
+      // data.file is already a File object after the transformation in the schema
       await uploadNote(
         data.title,
         "", // Empty description
-        data.file, // This is now a File object thanks to the transform in the schema
+        data.file, // Now properly typed as File thanks to the Zod transformation
         null // No user ID needed anymore
       );
       
