@@ -50,11 +50,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
       if (error) throw error;
     } catch (error: any) {
+      console.error("Sign in error:", error);
       toast({
         title: "Error signing in",
         description: error.message,
         variant: "destructive",
       });
+      throw error;
     } finally {
       setIsLoading(false);
     }
@@ -63,28 +65,38 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const signUp = async (email: string, password: string, username: string) => {
     try {
       setIsLoading(true);
-      const { error } = await supabase.auth.signUp({
+      const { error, data } = await supabase.auth.signUp({
         email,
         password,
         options: {
           data: {
             username,
           },
+          emailRedirectTo: window.location.origin,
         },
       });
 
       if (error) throw error;
       
-      toast({
-        title: "Account created",
-        description: "Please check your email to confirm your account",
-      });
+      if (data?.user && !data?.user?.confirmed_at) {
+        toast({
+          title: "Verification email sent",
+          description: "Please check your email to confirm your account",
+        });
+      } else {
+        toast({
+          title: "Account created",
+          description: "Your account has been created successfully",
+        });
+      }
     } catch (error: any) {
+      console.error("Sign up error:", error);
       toast({
         title: "Error signing up",
         description: error.message,
         variant: "destructive",
       });
+      throw error;
     } finally {
       setIsLoading(false);
     }

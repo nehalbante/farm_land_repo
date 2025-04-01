@@ -17,6 +17,7 @@ const Auth = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [username, setUsername] = useState("");
+  const [error, setError] = useState("");
   
   // Redirect if already authenticated
   useEffect(() => {
@@ -27,12 +28,39 @@ const Auth = () => {
   
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError("");
     await signIn(email, password);
   };
   
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError("");
+    
+    // Basic validation
+    if (password.length < 6) {
+      setError("Password must be at least 6 characters");
+      return;
+    }
+    
+    if (!validateEmail(email)) {
+      setError("Please enter a valid email address");
+      return;
+    }
+    
+    if (username.length < 3) {
+      setError("Username must be at least 3 characters");
+      return;
+    }
+    
     await signUp(email, password, username);
+  };
+  
+  const validateEmail = (email: string) => {
+    return String(email)
+      .toLowerCase()
+      .match(
+        /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|.(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
+      );
   };
   
   return (
@@ -50,6 +78,12 @@ const Auth = () => {
               <TabsTrigger value="signin">Sign In</TabsTrigger>
               <TabsTrigger value="signup">Sign Up</TabsTrigger>
             </TabsList>
+            
+            {error && (
+              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-4 text-sm">
+                {error}
+              </div>
+            )}
             
             <TabsContent value="signin">
               <form onSubmit={handleSignIn} className="space-y-4">

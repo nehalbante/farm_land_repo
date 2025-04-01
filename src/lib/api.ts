@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { Note, NoteWithDetails, Rating } from "@/types";
 import { Database } from "@/integrations/supabase/types";
@@ -98,6 +99,7 @@ export async function uploadNote(
   file: File,
   userId: string
 ): Promise<void> {
+  console.log("Starting file upload:", { title, fileName: file.name });
   const fileName = `${Date.now()}_${file.name}`;
   const filePath = `${userId}/${fileName}`;
 
@@ -118,6 +120,8 @@ export async function uploadNote(
   const fileType = file.type || 'unknown';
   const fileSize = formatFileSize(file.size);
 
+  console.log("File uploaded successfully:", { fileUrl, fileType, fileSize });
+
   // 2. Insert the note record
   const { error: insertError } = await supabase
     .from("notes")
@@ -137,6 +141,8 @@ export async function uploadNote(
     console.error("Error creating note record:", insertError);
     throw insertError;
   }
+  
+  console.log("Note record created successfully");
 }
 
 // Helper function to format file size
