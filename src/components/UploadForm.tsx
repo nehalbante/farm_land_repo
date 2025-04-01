@@ -49,6 +49,7 @@ export const UploadForm = ({ onSuccess }: UploadFormProps) => {
   const onSubmit = async (data: UploadFormValues) => {
     try {
       setIsUploading(true);
+      // Here's the fix: data.file is already a File object after the transformation
       await uploadNote(
         data.title,
         "", // Empty description
