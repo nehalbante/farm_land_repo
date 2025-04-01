@@ -112,13 +112,22 @@ export async function uploadNote(
     throw uploadError;
   }
 
+  // Get the public URL of the uploaded file
+  const fileUrl = getFileUrl(filePath);
+  
+  // Determine file type and size
+  const fileType = file.type || 'unknown';
+  const fileSize = formatFileSize(file.size);
+
   // 2. Insert the note record
   const { error: insertError } = await supabase
     .from("notes")
     .insert({
       title,
       description,
-      file_path: filePath,
+      file_url: fileUrl,
+      file_type: fileType,
+      file_size: fileSize,
       file_name: file.name,
       uploader_id: userId,
     });
@@ -129,6 +138,17 @@ export async function uploadNote(
     console.error("Error creating note record:", insertError);
     throw insertError;
   }
+}
+
+// Helper function to format file size
+function formatFileSize(bytes: number): string {
+  if (bytes === 0) return '0 Bytes';
+  
+  const k = 1024;
+  const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
 }
 
 export async function deleteNote(note: Note): Promise<void> {

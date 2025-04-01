@@ -3,8 +3,10 @@ export interface Note {
   id: string;
   title: string;
   description: string | null;
-  file_path: string;
+  file_url: string;
   file_name: string;
+  file_type: string;
+  file_size: string;
   uploader_id: string;
   created_at: string;
   updated_at: string;
