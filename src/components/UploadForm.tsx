@@ -15,8 +15,9 @@ import {
 import { Input } from "@/components/ui/input";
 import { uploadNote } from "@/lib/api";
 import { toast } from "@/hooks/use-toast";
-import { FileUp, Loader2, FileText } from "lucide-react";
+import { FileUp, Loader2, FileText, Upload } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
 
 const MAX_FILE_SIZE = 200 * 1024 * 1024; // 200 MB
 
@@ -38,6 +39,7 @@ interface UploadFormProps {
 export const UploadForm = ({ onSuccess }: UploadFormProps) => {
   const [isUploading, setIsUploading] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [uploadProgress, setUploadProgress] = useState(0);
   
   const form = useForm<UploadFormValues>({
     resolver: zodResolver(uploadFormSchema),
@@ -49,14 +51,22 @@ export const UploadForm = ({ onSuccess }: UploadFormProps) => {
   const onSubmit = async (data: UploadFormValues) => {
     try {
       setIsUploading(true);
+      setUploadProgress(0);
       
-      // data.file is a File object thanks to the Zod transform
+      // Create custom upload function with progress tracking
       const fileToUpload: File = data.file;
+      
+      // Custom progress tracker
+      const trackProgress = (progress: number) => {
+        setUploadProgress(progress);
+      };
+      
       await uploadNote(
         data.title,
         "", // Empty description
         fileToUpload,
-        null // No user ID needed anymore
+        null, // No user ID needed anymore
+        trackProgress // Pass the progress tracker
       );
       
       toast({
@@ -66,6 +76,7 @@ export const UploadForm = ({ onSuccess }: UploadFormProps) => {
       
       form.reset();
       setSelectedFile(null);
+      setUploadProgress(0);
       if (onSuccess) onSuccess();
     } catch (error: any) {
       console.error("Error uploading note:", error);
@@ -83,7 +94,7 @@ export const UploadForm = ({ onSuccess }: UploadFormProps) => {
     const files = e.target.files;
     if (files && files.length > 0) {
       setSelectedFile(files[0]);
-      form.setValue("file", files);
+      form.setValue("file", files as unknown as FileList);
     } else {
       setSelectedFile(null);
     }
@@ -143,6 +154,16 @@ export const UploadForm = ({ onSuccess }: UploadFormProps) => {
           </Card>
         )}
         
+        {isUploading && (
+          <div className="space-y-2">
+            <div className="flex justify-between text-sm text-gray-500">
+              <span>Uploading...</span>
+              <span>{uploadProgress}%</span>
+            </div>
+            <Progress value={uploadProgress} className="h-2" />
+          </div>
+        )}
+        
         <Button 
           type="submit" 
           className="w-full" 
@@ -150,7 +171,7 @@ export const UploadForm = ({ onSuccess }: UploadFormProps) => {
         >
           {isUploading ? (
             <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              <Upload className="mr-2 h-4 w-4 animate-pulse" />
               Uploading...
             </>
           ) : (

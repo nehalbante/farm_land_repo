@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { Note, NoteWithDetails, Rating } from "@/types";
 import { Database } from "@/integrations/supabase/types";
@@ -101,7 +102,8 @@ export async function uploadNote(
   title: string,
   description: string,
   file: File,
-  userId: string | null
+  userId: string | null,
+  onProgress?: (progress: number) => void
 ): Promise<void> {
   console.log("Starting file upload:", { title, fileName: file.name });
   const fileName = `${Date.now()}_${file.name}`;
@@ -110,10 +112,18 @@ export async function uploadNote(
   const folderName = userId || 'anonymous';
   const filePath = `${folderName}/${fileName}`;
 
-  // 1. Upload the file to storage
+  // 1. Upload the file to storage with progress tracking
   const { error: uploadError, data } = await supabase.storage
     .from("notes")
-    .upload(filePath, file);
+    .upload(filePath, file, {
+      onUploadProgress: (progress) => {
+        // Calculate percentage
+        const percent = Math.round((progress.loaded / progress.totalBytes) * 100);
+        if (onProgress) {
+          onProgress(percent);
+        }
+      },
+    });
 
   if (uploadError) {
     console.error("Error uploading file:", uploadError);
