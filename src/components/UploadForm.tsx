@@ -49,12 +49,12 @@ export const UploadForm = ({ onSuccess }: UploadFormProps) => {
   const onSubmit = async (data: UploadFormValues) => {
     try {
       setIsUploading(true);
-      // The file property is now transformed into a File object by Zod
-      const fileToUpload: File = data.file;
+      
+      // The Zod schema transforms FileList to a single File
       await uploadNote(
         data.title,
         "", // Empty description
-        fileToUpload, // Explicitly typed as File to avoid confusion
+        data.file, // This is now a File object due to Zod transform
         null // No user ID needed anymore
       );
       
@@ -78,7 +78,8 @@ export const UploadForm = ({ onSuccess }: UploadFormProps) => {
     }
   };
 
-  const handleFileChange = (files: FileList | null) => {
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
     if (files && files.length > 0) {
       setSelectedFile(files[0]);
       form.setValue("file", files);
@@ -115,7 +116,7 @@ export const UploadForm = ({ onSuccess }: UploadFormProps) => {
                   type="file"
                   onChange={(e) => {
                     onChange(e.target.files);
-                    handleFileChange(e.target.files);
+                    handleFileChange(e);
                   }}
                   {...rest}
                 />
