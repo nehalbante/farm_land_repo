@@ -31,7 +31,7 @@ export async function fetchNotes(searchQuery?: string): Promise<NoteWithDetails[
 
     return {
       ...note,
-      profile: note.profile || { username: "Unknown User" },
+      profile: note.profile || { username: "Anonymous User" },
       average_rating: averageRating,
       ratings_count: ratings.length,
     };
@@ -39,6 +39,8 @@ export async function fetchNotes(searchQuery?: string): Promise<NoteWithDetails[
 }
 
 export async function getUserRating(noteId: string, userId: string): Promise<number | null> {
+  if (!userId) return null;
+  
   const { data, error } = await supabase
     .from("ratings")
     .select("rating")
@@ -62,6 +64,10 @@ export async function rateNote(
   userId: string,
   rating: number
 ): Promise<void> {
+  if (!userId) {
+    throw new Error("You must be logged in to rate notes");
+  }
+  
   const existingRating = await getUserRating(noteId, userId);
   
   if (existingRating) {
@@ -97,11 +103,14 @@ export async function uploadNote(
   title: string,
   description: string,
   file: File,
-  userId: string
+  userId: string | null
 ): Promise<void> {
   console.log("Starting file upload:", { title, fileName: file.name });
   const fileName = `${Date.now()}_${file.name}`;
-  const filePath = `${userId}/${fileName}`;
+  
+  // Create folder path - if user is logged in, use their ID as folder, otherwise use 'anonymous'
+  const folderName = userId || 'anonymous';
+  const filePath = `${folderName}/${fileName}`;
 
   // 1. Upload the file to storage
   const { error: uploadError, data } = await supabase.storage
@@ -189,6 +198,8 @@ export function getFileUrl(filePath: string): string {
 }
 
 export async function getUserNotes(userId: string): Promise<NoteWithDetails[]> {
+  if (!userId) return [];
+  
   const { data, error } = await supabase
     .from("notes")
     .select(`
@@ -211,7 +222,7 @@ export async function getUserNotes(userId: string): Promise<NoteWithDetails[]> {
 
     return {
       ...note,
-      profile: note.profile || { username: "Unknown User" },
+      profile: note.profile || { username: "Anonymous User" },
       average_rating: averageRating,
       ratings_count: ratings.length,
     };

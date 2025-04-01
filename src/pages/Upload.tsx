@@ -1,24 +1,15 @@
 
-import { useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { useAuth } from "@/context/AuthContext";
 import { UploadForm } from "@/components/UploadForm";
 import { ArrowLeft } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 const Upload = () => {
-  const { user } = useAuth();
   const navigate = useNavigate();
   
-  useEffect(() => {
-    if (!user) {
-      navigate("/auth");
-    }
-  }, [user, navigate]);
-  
   const handleUploadSuccess = () => {
-    navigate("/profile");
+    navigate("/");
   };
   
   return (

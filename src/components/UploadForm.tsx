@@ -7,29 +7,26 @@ import { Button } from "@/components/ui/button";
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { useAuth } from "@/context/AuthContext";
 import { uploadNote } from "@/lib/api";
 import { toast } from "@/hooks/use-toast";
-import { FileUp, Loader2 } from "lucide-react";
+import { FileUp, Loader2, FileText } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
 
-const MAX_FILE_SIZE = 20 * 1024 * 1024; // 20 MB
+const MAX_FILE_SIZE = 200 * 1024 * 1024; // 200 MB
 
 const uploadFormSchema = z.object({
   title: z.string().min(3, "Title must be at least 3 characters"),
-  description: z.string().optional(),
   file: z
     .instanceof(FileList)
     .refine((files) => files.length === 1, "Please select a file")
     .transform((files) => files[0])
-    .refine((file) => file.size <= MAX_FILE_SIZE, "File size must be less than 20MB"),
+    .refine((file) => file.size <= MAX_FILE_SIZE, "File size must be less than 200MB"),
 });
 
 type UploadFormValues = z.infer<typeof uploadFormSchema>;
@@ -39,34 +36,24 @@ interface UploadFormProps {
 }
 
 export const UploadForm = ({ onSuccess }: UploadFormProps) => {
-  const { user } = useAuth();
   const [isUploading, setIsUploading] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   
   const form = useForm<UploadFormValues>({
     resolver: zodResolver(uploadFormSchema),
     defaultValues: {
       title: "",
-      description: "",
     },
   });
   
   const onSubmit = async (data: UploadFormValues) => {
-    if (!user) {
-      toast({
-        title: "Authentication required",
-        description: "Please log in to upload notes",
-        variant: "destructive",
-      });
-      return;
-    }
-    
     try {
       setIsUploading(true);
       await uploadNote(
         data.title,
-        data.description || "",
+        "", // Empty description
         data.file,
-        user.id
+        null // No user ID needed anymore
       );
       
       toast({
@@ -75,6 +62,7 @@ export const UploadForm = ({ onSuccess }: UploadFormProps) => {
       });
       
       form.reset();
+      setSelectedFile(null);
       if (onSuccess) onSuccess();
     } catch (error: any) {
       console.error("Error uploading note:", error);
@@ -85,6 +73,15 @@ export const UploadForm = ({ onSuccess }: UploadFormProps) => {
       });
     } finally {
       setIsUploading(false);
+    }
+  };
+
+  const handleFileChange = (files: FileList | null) => {
+    if (files && files.length > 0) {
+      setSelectedFile(files[0]);
+      form.setValue("file", files);
+    } else {
+      setSelectedFile(null);
     }
   };
   
@@ -107,24 +104,6 @@ export const UploadForm = ({ onSuccess }: UploadFormProps) => {
         
         <FormField
           control={form.control}
-          name="description"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Description (optional)</FormLabel>
-              <FormControl>
-                <Textarea 
-                  placeholder="Enter note description" 
-                  {...field} 
-                  value={field.value || ""}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        
-        <FormField
-          control={form.control}
           name="file"
           render={({ field: { onChange, value, ...rest } }) => (
             <FormItem>
@@ -132,17 +111,33 @@ export const UploadForm = ({ onSuccess }: UploadFormProps) => {
               <FormControl>
                 <Input
                   type="file"
-                  onChange={(e) => onChange(e.target.files)}
+                  onChange={(e) => {
+                    onChange(e.target.files);
+                    handleFileChange(e.target.files);
+                  }}
                   {...rest}
                 />
               </FormControl>
-              <FormDescription>
-                Upload PDF, Word, or other document files (max 20MB)
-              </FormDescription>
               <FormMessage />
             </FormItem>
           )}
         />
+
+        {selectedFile && (
+          <Card className="bg-gray-50 mt-4">
+            <CardContent className="pt-4">
+              <div className="flex items-center gap-3">
+                <FileText className="h-6 w-6 text-blue-500" />
+                <div>
+                  <p className="font-medium">{selectedFile.name}</p>
+                  <p className="text-sm text-gray-500">
+                    {(selectedFile.size / (1024 * 1024)).toFixed(2)} MB
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
         
         <Button 
           type="submit" 

@@ -4,15 +4,13 @@ import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { NoteCard } from "@/components/NoteCard";
-import { useAuth } from "@/context/AuthContext";
 import { fetchNotes } from "@/lib/api";
 import { NoteWithDetails } from "@/types";
-import { FileText, LogIn, Search, Upload, User } from "lucide-react";
+import { FileText, Search, Upload } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { Progress } from "@/components/ui/progress";
 
 const Index = () => {
-  const { user } = useAuth();
   const navigate = useNavigate();
   
   const [notes, setNotes] = useState<NoteWithDetails[]>([]);
@@ -70,36 +68,13 @@ const Index = () => {
             Notes Sharing
           </Link>
           
-          <div className="flex items-center gap-3">
-            {user ? (
-              <>
-                <Button 
-                  variant="outline" 
-                  onClick={() => navigate("/upload")}
-                  className="hidden md:flex items-center gap-2"
-                >
-                  <Upload className="h-4 w-4" />
-                  Upload Note
-                </Button>
-                <Button 
-                  variant="ghost" 
-                  onClick={() => navigate("/profile")}
-                  className="flex items-center gap-2"
-                >
-                  <User className="h-4 w-4" />
-                  <span className="hidden md:inline">Profile</span>
-                </Button>
-              </>
-            ) : (
-              <Button 
-                onClick={() => navigate("/auth")}
-                className="flex items-center gap-2"
-              >
-                <LogIn className="h-4 w-4" />
-                Sign In
-              </Button>
-            )}
-          </div>
+          <Button 
+            onClick={() => navigate("/upload")}
+            className="flex items-center gap-2"
+          >
+            <Upload className="h-4 w-4" />
+            Upload Note
+          </Button>
         </div>
       </header>
       
@@ -133,12 +108,10 @@ const Index = () => {
             <h2 className="text-2xl font-bold">
               {searchQuery ? "Search Results" : "All Notes"}
             </h2>
-            {user && (
-              <Button onClick={() => navigate("/upload")} className="flex items-center gap-2">
-                <Upload className="h-4 w-4" />
-                Upload Note
-              </Button>
-            )}
+            <Button onClick={() => navigate("/upload")} className="flex items-center gap-2">
+              <Upload className="h-4 w-4" />
+              Upload Note
+            </Button>
           </div>
           
           {isLoading ? (
@@ -152,7 +125,7 @@ const Index = () => {
                 <NoteCard 
                   key={note.id} 
                   note={note} 
-                  showRatingInteraction={!!user}
+                  showRatingInteraction={false}
                 />
               ))}
             </div>
@@ -164,9 +137,7 @@ const Index = () => {
                   ? "No notes match your search criteria. Try different keywords."
                   : "There are no notes available yet."}
               </p>
-              {user && (
-                <Button onClick={() => navigate("/upload")}>Upload Note</Button>
-              )}
+              <Button onClick={() => navigate("/upload")}>Upload Note</Button>
             </div>
           )}
         </section>

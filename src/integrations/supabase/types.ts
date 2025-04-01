@@ -20,7 +20,7 @@ export type Database = {
           id: string
           title: string
           updated_at: string | null
-          uploader_id: string
+          uploader_id: string | null
         }
         Insert: {
           created_at?: string | null
@@ -32,7 +32,7 @@ export type Database = {
           id?: string
           title: string
           updated_at?: string | null
-          uploader_id: string
+          uploader_id?: string | null
         }
         Update: {
           created_at?: string | null
@@ -44,7 +44,7 @@ export type Database = {
           id?: string
           title?: string
           updated_at?: string | null
-          uploader_id?: string
+          uploader_id?: string | null
         }
         Relationships: []
       }

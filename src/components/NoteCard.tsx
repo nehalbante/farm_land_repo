@@ -1,10 +1,10 @@
+
 import { useState } from "react";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Download, FileText, Trash2 } from "lucide-react";
 import { NoteWithDetails } from "@/types";
 import { RatingStars } from "./RatingStars";
-import { useAuth } from "@/context/AuthContext";
 import { deleteNote } from "@/lib/api";
 import { formatDistanceToNow } from "date-fns";
 import { toast } from "@/hooks/use-toast";
@@ -27,19 +27,28 @@ interface NoteCardProps {
 }
 
 export const NoteCard = ({ note, onDelete, showRatingInteraction = false }: NoteCardProps) => {
-  const { user } = useAuth();
   const [isDeleting, setIsDeleting] = useState(false);
   
-  const isOwner = user?.id === note.uploader_id;
+  // Since uploader_id is now nullable, we need to check if it exists
+  const isOwner = false; // Removing owner concept for anonymous uploads
   const fileUrl = note.file_url;
   
   const handleDownload = () => {
-    const link = document.createElement("a");
-    link.href = fileUrl;
-    link.download = note.file_name;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    try {
+      const link = document.createElement("a");
+      link.href = fileUrl;
+      link.download = note.file_name;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (error) {
+      console.error("Error downloading file:", error);
+      toast({
+        title: "Error downloading file",
+        description: "Please try again later",
+        variant: "destructive",
+      });
+    }
   };
   
   const handleDelete = async () => {
@@ -65,39 +74,18 @@ export const NoteCard = ({ note, onDelete, showRatingInteraction = false }: Note
     }
   };
   
+  // Format uploaded date
+  let uploadedDate;
+  try {
+    uploadedDate = formatDistanceToNow(new Date(note.created_at), { addSuffix: true });
+  } catch (error) {
+    uploadedDate = "Unknown date";
+  }
+  
   return (
     <Card className="w-full overflow-hidden">
       <CardHeader className="pb-2">
-        <div className="flex items-start justify-between">
-          <CardTitle className="text-lg font-bold line-clamp-1">{note.title}</CardTitle>
-          {isOwner && (
-            <AlertDialog>
-              <AlertDialogTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-8 w-8">
-                  <Trash2 className="h-4 w-4 text-red-500" />
-                </Button>
-              </AlertDialogTrigger>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    This will permanently delete this note and any associated ratings.
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                  <AlertDialogAction 
-                    onClick={handleDelete}
-                    className="bg-red-500 hover:bg-red-600"
-                    disabled={isDeleting}
-                  >
-                    {isDeleting ? "Deleting..." : "Delete"}
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
-          )}
-        </div>
+        <CardTitle className="text-lg font-bold line-clamp-1">{note.title}</CardTitle>
       </CardHeader>
       <CardContent className="pb-2">
         {note.description && (
@@ -109,25 +97,27 @@ export const NoteCard = ({ note, onDelete, showRatingInteraction = false }: Note
             <span className="truncate max-w-[150px]">{note.file_name}</span>
           </div>
           <div>
-            Uploaded by <span className="font-medium">{note.profile?.username || "Unknown User"}</span>
+            {note.file_size}
           </div>
           <div>
-            {formatDistanceToNow(new Date(note.created_at), { addSuffix: true })}
+            {uploadedDate}
           </div>
         </div>
       </CardContent>
       <CardFooter className="flex justify-between pt-2">
-        <RatingStars 
-          noteId={note.id}
-          averageRating={note.average_rating}
-          ratingsCount={note.ratings_count}
-          interactive={showRatingInteraction}
-        />
+        {showRatingInteraction && (
+          <RatingStars 
+            noteId={note.id}
+            averageRating={note.average_rating}
+            ratingsCount={note.ratings_count}
+            interactive={showRatingInteraction}
+          />
+        )}
         <Button 
           onClick={handleDownload} 
           variant="default" 
           size="sm"
-          className="gap-1"
+          className="gap-1 ml-auto"
         >
           <Download className="h-4 w-4" />
           Download
