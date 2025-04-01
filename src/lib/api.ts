@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { Note, NoteWithDetails, Rating } from "@/types";
 import { Database } from "@/integrations/supabase/types";
@@ -152,10 +151,14 @@ function formatFileSize(bytes: number): string {
 }
 
 export async function deleteNote(note: Note): Promise<void> {
+  // Extract filename from the file_url
+  const urlParts = note.file_url.split('/');
+  const filePath = urlParts[urlParts.length - 2] + '/' + urlParts[urlParts.length - 1];
+  
   // 1. Delete the file from storage
   const { error: storageError } = await supabase.storage
     .from("notes")
-    .remove([note.file_path]);
+    .remove([filePath]);
 
   if (storageError) {
     console.error("Error deleting file:", storageError);

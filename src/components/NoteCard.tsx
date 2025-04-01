@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -6,7 +5,7 @@ import { Download, FileText, Trash2 } from "lucide-react";
 import { NoteWithDetails } from "@/types";
 import { RatingStars } from "./RatingStars";
 import { useAuth } from "@/context/AuthContext";
-import { deleteNote, getFileUrl } from "@/lib/api";
+import { deleteNote } from "@/lib/api";
 import { formatDistanceToNow } from "date-fns";
 import { toast } from "@/hooks/use-toast";
 import {
@@ -32,7 +31,7 @@ export const NoteCard = ({ note, onDelete, showRatingInteraction = false }: Note
   const [isDeleting, setIsDeleting] = useState(false);
   
   const isOwner = user?.id === note.uploader_id;
-  const fileUrl = getFileUrl(note.file_path);
+  const fileUrl = note.file_url;
   
   const handleDownload = () => {
     const link = document.createElement("a");
