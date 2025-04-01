@@ -1,6 +1,7 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { Note, NoteWithDetails, Rating } from "@/types";
+import { Database } from "@/integrations/supabase/types";
 
 export async function fetchNotes(searchQuery?: string): Promise<NoteWithDetails[]> {
   let query = supabase
@@ -23,7 +24,7 @@ export async function fetchNotes(searchQuery?: string): Promise<NoteWithDetails[
     throw error;
   }
 
-  return data.map((note: any) => {
+  return (data || []).map((note: any) => {
     const ratings = note.ratings || [];
     const ratingsSum = ratings.reduce((sum: number, r: any) => sum + r.rating, 0);
     const averageRating = ratings.length > 0 ? ratingsSum / ratings.length : null;
@@ -53,7 +54,7 @@ export async function getUserRating(noteId: string, userId: string): Promise<num
     throw error;
   }
 
-  return data.rating;
+  return data?.rating || null;
 }
 
 export async function rateNote(
@@ -77,11 +78,13 @@ export async function rateNote(
     }
   } else {
     // Insert new rating
-    const { error } = await supabase.from("ratings").insert({
-      note_id: noteId,
-      user_id: userId,
-      rating,
-    });
+    const { error } = await supabase
+      .from("ratings")
+      .insert({
+        note_id: noteId,
+        user_id: userId,
+        rating,
+      });
 
     if (error) {
       console.error("Error inserting rating:", error);
@@ -110,13 +113,15 @@ export async function uploadNote(
   }
 
   // 2. Insert the note record
-  const { error: insertError } = await supabase.from("notes").insert({
-    title,
-    description,
-    file_path: filePath,
-    file_name: file.name,
-    uploader_id: userId,
-  });
+  const { error: insertError } = await supabase
+    .from("notes")
+    .insert({
+      title,
+      description,
+      file_path: filePath,
+      file_name: file.name,
+      uploader_id: userId,
+    });
 
   if (insertError) {
     // Attempt to clean up the file if the record insertion fails
@@ -170,7 +175,7 @@ export async function getUserNotes(userId: string): Promise<NoteWithDetails[]> {
     throw error;
   }
 
-  return data.map((note: any) => {
+  return (data || []).map((note: any) => {
     const ratings = note.ratings || [];
     const ratingsSum = ratings.reduce((sum: number, r: any) => sum + r.rating, 0);
     const averageRating = ratings.length > 0 ? ratingsSum / ratings.length : null;
