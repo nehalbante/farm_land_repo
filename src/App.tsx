@@ -1,30 +1,116 @@
+import React, { useState } from 'react';
+import { LoginPage } from './components/auth/LoginPage';
+import { RegisterPage } from './components/auth/RegisterPage';
+import { HomePage } from './components/home/HomePage';
+import { Dashboard } from './components/dashboard/Dashboard';
+import { ListingPage } from './components/listings/ListingPage';
+import { SearchResults } from './components/search/SearchResults';
+import { AdminDashboard } from './components/admin/AdminDashboard';
+import { ChatPage } from './components/chat/ChatPage';
 
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Index from "./pages/Index";
-import Upload from "./pages/Upload";
-import NotFound from "./pages/NotFound";
+type User = {
+  id: string;
+  name: string;
+  email: string;
+  role: 'farmer' | 'admin';
+  location: {
+    district: string;
+    village: string;
+  };
+};
 
-const queryClient = new QueryClient();
+type Page = 'login' | 'register' | 'home' | 'dashboard' | 'listing' | 'search' | 'admin' | 'chat';
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/upload" element={<Upload />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
-    </TooltipProvider>
-  </QueryClientProvider>
-);
+export default function App() {
+  const [currentPage, setCurrentPage] = useState<Page>('login');
+  const [user, setUser] = useState<User | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
 
-export default App;
+  const handleLogin = (userData: User) => {
+    setUser(userData);
+    setCurrentPage('home');
+  };
+
+  const handleLogout = () => {
+    setUser(null);
+    setCurrentPage('login');
+  };
+
+  const navigateTo = (page: string) => {
+    setCurrentPage(page as Page);
+  };
+
+  const handleSearch = (query: string) => {
+    setSearchQuery(query);
+    setCurrentPage('search');
+  };
+
+  if (!user && currentPage !== 'register') {
+    if (currentPage === 'login') {
+      return (
+        <LoginPage 
+          onLogin={handleLogin} 
+          onNavigateToRegister={() => setCurrentPage('register')}
+        />
+      );
+    }
+  }
+
+  if (!user && currentPage === 'register') {
+    return (
+      <RegisterPage 
+        onRegister={handleLogin}
+        onNavigateToLogin={() => setCurrentPage('login')}
+      />
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-background">
+      {currentPage === 'home' && (
+        <HomePage 
+          user={user!} 
+          onNavigate={navigateTo}
+          onSearch={handleSearch}
+          onLogout={handleLogout}
+        />
+      )}
+      {currentPage === 'dashboard' && (
+        <Dashboard 
+          user={user!} 
+          onNavigate={navigateTo}
+          onLogout={handleLogout}
+        />
+      )}
+      {currentPage === 'listing' && (
+        <ListingPage 
+          user={user!} 
+          onNavigate={navigateTo}
+          onLogout={handleLogout}
+        />
+      )}
+      {currentPage === 'search' && (
+        <SearchResults 
+          user={user!} 
+          searchQuery={searchQuery}
+          onNavigate={navigateTo}
+          onLogout={handleLogout}
+        />
+      )}
+      {currentPage === 'chat' && (
+        <ChatPage 
+          user={user!} 
+          onNavigate={navigateTo}
+          onLogout={handleLogout}
+        />
+      )}
+      {currentPage === 'admin' && user?.role === 'admin' && (
+        <AdminDashboard 
+          user={user} 
+          onNavigate={navigateTo}
+          onLogout={handleLogout}
+        />
+      )}
+    </div>
+  );
+}
